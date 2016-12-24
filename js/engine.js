@@ -79,8 +79,11 @@ var Engine = (function(global) {
      * on the entities themselves within your app.js file).
      */
     function update(dt) {
-        updateEntities(dt);
-        // checkCollisions();
+        if (!gameOver()) {
+            updateEntities(dt);
+            checkCollisions();
+            checkGoalReached();
+        }
     }
 
     /* This is called by the update function and loops through all of the
@@ -137,6 +140,13 @@ var Engine = (function(global) {
         }
 
         renderEntities();
+        drawLivesAndScore();
+
+        //if player's lives reach 0, display a gameover screen and make the image grayscale
+        if (gameOver()) {
+            makeGrayScale();
+            displayGameOver();
+        }
     }
 
     /* This function is called by the render function and is called on each game
@@ -154,12 +164,94 @@ var Engine = (function(global) {
         player.render();
     }
 
+    /* Check for collisions between the player and a bug
+     * Loop through all the enemies and first check whether an enemy bug and the player are on the same row
+     * If they are on the same row, then check whether the x coordinate of the player(with added width) overlaps
+     * with the x coordinate of the bug(with added width)
+     * If a collision occurs, bring the player back to starting position and decrement the player's lives
+     */
+    function checkCollisions() {
+        allEnemies.forEach(function(enemy) {
+            if (enemy.cell[1] == player.cell[1]) {
+                if (player.cell[0] * X_SCALE + 10 < enemy.x + IMAGE_WIDTH && player.cell[0] * X_SCALE + IMAGE_WIDTH - 10 > enemy.x) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    player.cell = [2, 5];
+                    player.lives--;
+                }
+            }
+        });
+    }
+
+    // Display the current lives and score of the player
+    function drawLivesAndScore() {
+        ctx.fillText("LIVES: " + player.lives, 0, 35);
+        ctx.fillText("SCORE: " + player.score, canvas.width/2 + 50, 35);
+    }
+
+    /* If player has reached the goal which is when player is at first row (row 0)
+     * Put the player back at their starting position and increase the player's score by 100
+     * Need to clear the canvas beforehand otherwise the text gets written over and looks blurry
+     */
+    function checkGoalReached() {
+        if (player.cell[1] == 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            player.cell = [2, 5];
+            player.score += 100;
+        }
+    }
+
+    /* checks whether game is over
+     * @returns  boolean
+     */
+    function gameOver() {
+        return player.lives == 0;
+    }
+
     /* This function does nothing but it could have been a good place to
      * handle game reset states - maybe a new game menu or a game over screen
      * those sorts of things. It's only called once by the init() method.
      */
     function reset() {
-        // noop
+        ctx.font = "24px serif";
+        ctx.fillStyle = "gray";
+    }
+
+    /* Credit to Udacity's HTML 5 Canvas course at https://www.udacity.com/course/html5-canvas--ud292
+     * Gives the canvas image a 'greyed' out look by manipulating the r,g,b values
+     * @param   r
+     * @param   g
+     * @param   b
+     * @param   a
+     */
+    function makePixelGrayScale (r,g,b,a) {
+        var y = (0.3 * r) + (0.59 * g) + (0.11 * b);
+        return {r:y, g:y, b:y, a:y};
+    }
+
+    function makeGrayScale() {
+        var r,g,b,a;
+        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        var numPixels = imageData.data.length / 4;
+        for (var i = 0; i < numPixels; i++) {
+            r = imageData.data[i * 4 + 0];
+            g = imageData.data[i * 4 + 1];
+            b = imageData.data[i * 4 + 2];
+            a = imageData.data[i * 4 + 3];
+            pixel = makePixelGrayScale(r,g,b,a);
+            imageData.data[i * 4 + 0] = pixel.r;
+            imageData.data[i * 4 + 1] = pixel.g;
+            imageData.data[i * 4 + 2] = pixel.b;
+            imageData.data[i * 4 + 3] = pixel.a;
+        }
+        ctx.putImageData(imageData, 0, 0);
+    }
+
+    /* Displays the GAMEOVER screen when the player's lives hit 0
+     * Use the width and height of the canvas as starting points to properly align the text
+     */
+    function displayGameOver() {
+        ctx.strokeText("GAME OVER", canvas.width / 2 - 75, canvas.height / 2 - 75);
+        ctx.strokeText("PRESS SPACE TO PLAY AGAIN", canvas.width / 2 - 165, canvas.height / 2 - 25);
     }
 
     /* Go ahead and load all of the images we know we're going to need to
