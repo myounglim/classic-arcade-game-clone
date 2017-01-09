@@ -4,7 +4,7 @@ This is a remake of the Arcade Game **Frogger** implemented in JavaScript. The u
 
 ## Getting Started
 
-To demo the app, visit the link [here] (https://myounglim.github.io/classic-arcade-game-clone) You can also clone the repo then open _index.html_ in the browser of your choice to run the game. Use the arrow keys to move the player and avoid the enemies to make your way to the other side of the road.
+To demo the app, visit the link [here] (https://myounglim.github.io/classic-arcade-game-clone). You can also clone the repo then open _index.html_ in the browser of your choice to run the game. Use the arrow keys to move the player and avoid the enemies to make your way to the other side of the road.
 
 ### Issues
 
